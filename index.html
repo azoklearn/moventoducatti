@@ -433,10 +433,12 @@
     <div id="stage">
 
       <!-- La vidéo n'a ni autoplay ni controls : son currentTime est
-           piloté par le scroll. Source .mp4 déclarée en premier,
-           .webm (fichier présent) en repli automatique. -->
+           piloté par le scroll. Sources par ordre de priorité :
+           fichier local, CDN Cloudinary (si le fichier local manque,
+           par ex. sur un autre hébergement), puis .webm en dernier repli. -->
       <video id="film" muted playsinline webkit-playsinline preload="auto" disablepictureinpicture>
         <source src="videoducatti.mp4" type="video/mp4">
+        <source src="https://res.cloudinary.com/dk2kai0as/video/upload/v1787946182/videoducatti_ntx5mb.mp4" type="video/mp4">
         <source src="videoducatti.webm" type="video/webm">
       </video>
 
@@ -632,12 +634,19 @@
       });
 
       function step() {
+        /* vidéo pas prête ou seek en cours : on attend sans faire avancer le lerp,
+           sinon la variable interne converge sans que la vidéo ait bougé */
+        if (video.readyState < 2 || video.seeking) {
+          rafId = requestAnimationFrame(step);
+          return;
+        }
         var diff = targetTime - currentTime;
-        if (Math.abs(diff) < 0.001 && !video.seeking) { rafId = null; return; }  // boucle stoppée au repos
-        currentTime += diff * 0.1;                             // lerp, facteur 0.1
-        /* on n'empile jamais un seek sur un seek en cours (sinon l'image se fige),
-           et on n'assigne que si le navigateur a des données décodables */
-        if (video.readyState >= 2 && !video.seeking) video.currentTime = currentTime;
+        if (Math.abs(diff) < 0.001) { rafId = null; return; }  // boucle stoppée au repos
+        /* lerp ~0.1 en scroll normal ; facteur renforcé sur les grands écarts
+           (drag de scrollbar) pour compenser la latence des seeks */
+        var k = Math.min(0.35, 0.1 + Math.abs(diff) * 0.03);
+        currentTime += diff * k;
+        video.currentTime = currentTime;                       // jamais pendant un seek (voir garde ci-dessus)
         rafId = requestAnimationFrame(step);
       }
 
