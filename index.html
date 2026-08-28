@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ducati Superleggera V4 — 152,2 kg. 224 cv. 500 exemplaires.</title>
+
+  <!-- SEO / Open Graph -->
+  <meta name="description" content="Ducati Superleggera V4 : la moto de série la plus légère jamais produite par Ducati. 152,2 kg à sec, 224 cv, cadre et jantes en fibre de carbone, 500 exemplaires dans le monde.">
+  <meta property="og:title" content="Ducati Superleggera V4">
+  <meta property="og:description" content="152,2 kg à sec. 224 cv. Carbone intégral. 500 exemplaires dans le monde.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="Ducati Superleggera V4">
+  <meta name="theme-color" content="#000000">
+
+  <!-- Typographies : Anton (display condensée) + Inter (corps) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       BASE — palette réduite : noir, blanc, rouge Ducati.
+       Aucune ombre, aucun coin arrondi, aucun dégradé décoratif.
+       ============================================================ */
+    :root {
+      --noir: #000000;
+      --blanc: #FFFFFF;
+      --rouge: #CC0000;
+      --gris: rgba(255, 255, 255, 0.62);   /* texte secondaire, contraste > 7:1 sur noir */
+      --hairline: rgba(255, 255, 255, 0.22);
+      --pad-x: clamp(24px, 6vw, 96px);
+      --display: 'Anton', Impact, sans-serif;
+      --body: 'Inter', -apple-system, sans-serif;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: auto; } /* le scrubbing exige un scroll natif, jamais smooth */
+
+    body {
+      background: var(--noir);
+      color: var(--blanc);
+      font-family: var(--body);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Grain de film léger — SVG turbulence en pseudo-élément fixe */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+      opacity: 0.04;
+      mix-blend-mode: overlay;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================================
+       PRÉCHARGEMENT
+       ============================================================ */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--noir);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      transition: opacity 600ms ease;   /* fondu de sortie de 600 ms */
+    }
+    #loader.done { opacity: 0; pointer-events: none; }
+    #loader .logo {
+      font-family: var(--display);
+      font-size: clamp(2.2rem, 6vw, 3.6rem);
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+    #loader .logo-sub {
+      font-size: 11px;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--gris);
+    }
+    #loader .bar {
+      width: 180px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+    #loader .bar-fill {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: var(--rouge);
+      transition: width 250ms linear;
+    }
+
+    /* ============================================================
+       CHROME FIXE — barre de progression + marque
+       ============================================================ */
+    #progress {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--rouge);
+      transform: scaleX(0);
+      transform-origin: left center;
+      z-index: 10;
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 22px var(--pad-x);
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+    header .brand { font-family: var(--display); font-size: 15px; letter-spacing: 0.14em; }
+    header .serial { color: var(--gris); }
+
+    /* ============================================================
+       PISTE DE SCROLL + VIDÉO STICKY
+       Le conteneur de 600vh définit la longueur du film au scroll.
+       ============================================================ */
+    #track { height: 600vh; position: relative; }
+
+    #stage {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100svh;
+      overflow: hidden;
+    }
+
+    #film {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    /* Voile de lisibilité : radial noir 55% au centre + linéaire en bas */
+    .veil {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 120% 90% at 50% 48%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.18) 62%, rgba(0,0,0,0.38) 100%),
+        linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0) 28%);
+    }
+
+    /* ============================================================
+       BLOCS DE TEXTE SUPERPOSÉS
+       Position absolue au-dessus de la vidéo ; GSAP pilote
+       l'opacité / translateY / blur de .inner via le scroll.
+       ============================================================ */
+    .block {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--pad-x);
+      pointer-events: none;   /* la scène ne capte jamais le scroll */
+    }
+    .block .inner { max-width: 560px; }
+    .block .inner.wc { will-change: transform, opacity, filter; } /* posé/retiré par JS autour de la plage active */
+
+    .block--center { justify-content: center; text-align: center; }
+    .block--right  { justify-content: flex-end; text-align: right; }
+    .block--left .inner { max-width: 40%; }
+
+    .kicker {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--gris);
+      margin-bottom: 18px;
+    }
+    .kicker::before {
+      content: "";
+      display: inline-block;
+      width: 28px;
+      height: 2px;
+      background: var(--rouge);
+      vertical-align: middle;
+      margin-right: 14px;
+    }
+    .block--right .kicker::before { margin-right: 0; margin-left: 14px; }
+    .block--center .kicker::before { display: none; }
+
+    h1, h2 {
+      font-family: var(--display);
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+      font-weight: 400;
+    }
+    h2 { font-size: clamp(2rem, 5.4vw, 4.6rem); margin-bottom: 20px; }
+
+    .lead { color: rgba(255, 255, 255, 0.78); max-width: 46ch; }
+    .block--right .lead { margin-left: auto; }
+
+    .spec-line {
+      margin-top: 22px;
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gris);
+    }
+
+    /* — 1. HERO — */
+    #b-hero h1 {
+      font-size: clamp(3rem, 12vw, 11rem);
+    }
+    #b-hero .hero-sub {
+      margin-top: 26px;
+      font-size: 13px;
+      letter-spacing: 0.44em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+    }
+    .scroll-hint {
+      position: absolute;
+      bottom: 34px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      font-size: 10px;
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: var(--gris);
+    }
+    .scroll-hint .line {
+      width: 1px;
+      height: 52px;
+      background: rgba(255, 255, 255, 0.3);
+      overflow: hidden;
+      position: relative;
+    }
+    .scroll-hint .line::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--blanc);
+      animation: sweep 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    }
+    @keyframes sweep {
+      0%   { transform: translateY(-100%); }
+      55%  { transform: translateY(0); }
+      100% { transform: translateY(100%); }
+    }
+
+    /* — 3. PUISSANCE : compteur — */
+    .power {
+      font-family: var(--display);
+      font-size: clamp(5rem, 18vw, 15rem);
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .power .unit {
+      font-size: 0.22em;
+      color: var(--rouge);
+      margin-left: 0.18em;
+      letter-spacing: 0;
+    }
+
+    /* — 6. CARBONE : liste en petites capitales, séparateurs fins — */
+    .carbon-list {
+      list-style: none;
+      margin-top: 8px;
+      min-width: min(460px, 100%);
+    }
+    .carbon-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 32px;
+      padding: 13px 0;
+      border-top: 1px solid var(--hairline);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+    .carbon-list li:last-child { border-bottom: 1px solid var(--hairline); }
+    .carbon-list li span:last-child { color: var(--gris); letter-spacing: 0.14em; }
+
+    /* — 7. OUTRO : CTA contour fin, remplissage rouge au survol — */
+    .cta {
+      display: inline-block;
+      position: relative;
+      margin-top: 40px;
+      padding: 17px 54px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      background: transparent;
+      color: var(--blanc);
+      font-family: var(--body);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      pointer-events: auto;
+      overflow: hidden;
+      transition: border-color 350ms ease;
+    }
+    .cta::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--rouge);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 420ms cubic-bezier(0.65, 0, 0.35, 1);
+    }
+    .cta span { position: relative; z-index: 1; }
+    .cta:hover, .cta:focus-visible { border-color: var(--rouge); }
+    .cta:hover::before, .cta:focus-visible::before { transform: scaleX(1); }
+
+    /* ============================================================
+       FALLBACK iOS — fondu CSS classique, sans scrubbing.
+       La classe .ios est posée sur <html> par le JS.
+       ============================================================ */
+    html.ios .block .inner {
+      opacity: 0;
+      transform: translateY(30px);
+      filter: blur(8px);
+      transition: opacity 650ms ease, transform 650ms ease, filter 650ms ease;
+    }
+    html.ios .block.on .inner {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    /* ============================================================
+       RESPONSIVE < 768px
+       ============================================================ */
+    @media (max-width: 767px) {
+      :root { --pad-x: 24px; }
+      #track { height: 400vh; }
+      .block, .block--right, .block--left { justify-content: center; text-align: center; }
+      .block .inner, .block--left .inner { max-width: 100%; width: 100%; }
+      .block--right .lead, .lead { margin: 0 auto; }
+      .kicker::before, .block--right .kicker::before { display: none; }
+      #b-hero h1 { font-size: clamp(2.6rem, 15vw, 5rem); }
+      h2 { font-size: clamp(1.8rem, 9vw, 3rem); }
+      .carbon-list li { letter-spacing: 0.16em; }
+    }
+
+    /* ============================================================
+       MODE STATIQUE — prefers-reduced-motion et absence de JS :
+       poster figé, textes en flux normal, aucune animation.
+       La classe .static est posée par le JS ; le <noscript>
+       ci-dessous applique les mêmes règles sans JS.
+       ============================================================ */
+    html.static #track { height: auto; }
+    html.static #stage { position: static; height: 62vh; }
+    html.static #film { position: static; height: 62vh; }
+    html.static .veil { display: none; }
+    html.static .block {
+      position: static;
+      display: block;
+      padding: 64px var(--pad-x);
+      border-top: 1px solid var(--hairline);
+    }
+    html.static .block .inner { opacity: 1 !important; transform: none !important; filter: none !important; max-width: 640px; margin: 0 auto; }
+    html.static .scroll-hint, html.static #progress { display: none; }
+    html.static #loader { display: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .scroll-hint .line::after { animation: none; }
+      .cta, .cta::before { transition: none; }
+    }
+  </style>
+
+  <noscript>
+    <style>
+      /* Sans JS : mêmes règles que le mode statique */
+      #track { height: auto !important; }
+      #stage { position: static !important; height: auto !important; }
+      #film { position: static !important; height: 62vh !important; }
+      .veil, .scroll-hint, #progress, #loader { display: none !important; }
+      .block { position: static !important; display: block !important; padding: 64px var(--pad-x) !important; border-top: 1px solid rgba(255,255,255,0.22); }
+      .block .inner { opacity: 1 !important; transform: none !important; filter: none !important; max-width: 640px; margin: 0 auto; }
+    </style>
+  </noscript>
+</head>
+<body>
+
+  <!-- ÉCRAN DE PRÉCHARGEMENT -->
+  <div id="loader" role="status" aria-label="Chargement">
+    <p class="logo">Ducati</p>
+    <div class="bar"><span class="bar-fill" id="loader-fill"></span></div>
+    <p class="logo-sub">Superleggera V4</p>
+  </div>
+
+  <!-- BARRE DE PROGRESSION GLOBALE (2px, rouge) -->
+  <div id="progress" aria-hidden="true"></div>
+
+  <header>
+    <span class="brand">Ducati</span>
+    <span class="serial">Superleggera V4 · 001 / 500</span>
+  </header>
+
+  <!-- PISTE DE SCROLL : 600vh. La scène sticky reste plein écran. -->
+  <main id="track">
+    <div id="stage">
+
+      <!-- La vidéo n'a ni autoplay ni controls : son currentTime est
+           piloté par le scroll. Source .mp4 déclarée en premier,
+           .webm (fichier présent) en repli automatique. -->
+      <video id="film" muted playsinline webkit-playsinline preload="auto" disablepictureinpicture>
+        <source src="videoducatti.mp4" type="video/mp4">
+        <source src="videoducatti.webm" type="video/webm">
+      </video>
+
+      <div class="veil" aria-hidden="true"></div>
+
+      <!-- 1 · HERO · 0–10% -->
+      <section class="block block--center" id="b-hero" aria-label="Superleggera V4">
+        <div class="inner">
+          <h1>Superleggera V4</h1>
+          <p class="hero-sub">Ducati. 100 anni.</p>
+        </div>
+        <div class="scroll-hint" aria-hidden="true">
+          <span>Scroll</span>
+          <span class="line"></span>
+        </div>
+      </section>
+
+      <!-- 2 · LE MOTEUR · 12–25% -->
+      <section class="block block--left" id="b-moteur" aria-label="Le moteur">
+        <div class="inner">
+          <p class="kicker">Le moteur</p>
+          <h2>Desmosedici Stradale&nbsp;R</h2>
+          <p class="lead">Dérivé directement de la MotoGP, le V4 le plus abouti jamais monté sur une Ducati de série. Distribution desmodromique, régime maximal de 15&nbsp;500&nbsp;tr/min.</p>
+          <p class="spec-line">998 cm³ · V4 90° · vilebrequin contre-rotatif</p>
+        </div>
+      </section>
+
+      <!-- 3 · LA PUISSANCE · 28–42% -->
+      <section class="block block--center" id="b-puissance" aria-label="La puissance">
+        <div class="inner">
+          <p class="kicker">La puissance</p>
+          <p class="power"><span id="power-num">0</span><span class="unit">CV</span></p>
+          <p class="spec-line">234 cv avec le kit racing Akrapovič</p>
+        </div>
+      </section>
+
+      <!-- 4 · LE POIDS · 45–58% -->
+      <section class="block block--center" id="b-poids" aria-label="Le poids">
+        <div class="inner">
+          <p class="kicker">Le poids</p>
+          <h2>152,2 kg à sec</h2>
+          <p class="lead">La moto de série la plus légère jamais produite par Ducati.</p>
+          <p class="spec-line">Ratio poids / puissance : 0,68 kg par cv</p>
+        </div>
+      </section>
+
+      <!-- 5 · L'AÉRODYNAMIQUE · 60–72% -->
+      <section class="block block--right" id="b-aero" aria-label="L'aérodynamique">
+        <div class="inner">
+          <p class="kicker">L'aérodynamique</p>
+          <h2>Ailerons biplan</h2>
+          <p class="lead">Directement dérivés de la Desmosedici GP16, les ailerons en carbone génèrent l'appui le plus élevé jamais atteint sur une moto homologuée.</p>
+          <p class="spec-line">50 kg d'appui à 270 km/h</p>
+        </div>
+      </section>
+
+      <!-- 6 · LE CARBONE · 75–88% -->
+      <section class="block block--center" id="b-carbone" aria-label="Le carbone">
+        <div class="inner">
+          <p class="kicker">Le carbone</p>
+          <h2>Fibre intégrale</h2>
+          <ul class="carbon-list">
+            <li><span>Cadre monocoque</span><span>−1,7 kg</span></li>
+            <li><span>Sous-cadre</span><span>−1,2 kg</span></li>
+            <li><span>Bras oscillant</span><span>−0,9 kg</span></li>
+            <li><span>Jantes</span><span>−3,4 kg</span></li>
+            <li><span>Carénages</span><span>−1,8 kg</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 7 · OUTRO · 90–100% -->
+      <section class="block block--center" id="b-outro" aria-label="Édition limitée">
+        <div class="inner">
+          <h2>500 exemplaires<br>dans le monde</h2>
+          <p class="lead">Chaque machine est numérotée, livrée avec son certificat d'authenticité et l'accès au programme SBK Experience.</p>
+          <a class="cta" href="#" aria-label="Découvrir la Superleggera V4"><span>Découvrir</span></a>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- GSAP 3 + ScrollTrigger via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var video   = document.getElementById("film");
+    var track   = document.getElementById("track");
+    var loader  = document.getElementById("loader");
+    var fill    = document.getElementById("loader-fill");
+    var bar     = document.getElementById("progress");
+    var powerEl = document.getElementById("power-num");
+    var root    = document.documentElement;
+
+    var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    /* iOS ne gère pas le scrubbing vidéo de façon fiable → lecture en boucle */
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+    /* Plages de visibilité des 7 blocs, en % de la piste de scroll */
+    var BLOCKS = [
+      { el: "#b-hero",      start: 0,  end: 10 },
+      { el: "#b-moteur",    start: 12, end: 25 },
+      { el: "#b-puissance", start: 28, end: 42 },
+      { el: "#b-poids",     start: 45, end: 58 },
+      { el: "#b-aero",      start: 60, end: 72 },
+      { el: "#b-carbone",   start: 75, end: 88 },
+      { el: "#b-outro",     start: 90, end: 100 }
+    ];
+
+    /* ---------- Préchargement ---------- */
+    var loaderClosed = false;
+    function closeLoader() {
+      if (loaderClosed) return;
+      loaderClosed = true;
+      fill.style.width = "100%";
+      loader.classList.add("done");                       // fondu 600 ms (CSS)
+      setTimeout(function () { loader.remove(); }, 700);
+    }
+    video.addEventListener("progress", function () {
+      if (!video.duration || loaderClosed) return;
+      var b = video.buffered;
+      if (b.length) fill.style.width = Math.round((b.end(b.length - 1) / video.duration) * 100) + "%";
+    });
+    video.addEventListener("canplaythrough", closeLoader);
+    setTimeout(closeLoader, 8000);                        // garde-fou si canplaythrough ne vient jamais
+
+    /* ---------- Mode statique (reduced motion) : aucun scrubbing, aucune animation ---------- */
+    if (reduceMotion) {
+      root.classList.add("static");
+      closeLoader();
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    /* On attend loadedmetadata (duration connue) avant d'initialiser */
+    if (video.readyState >= 1) init();
+    else video.addEventListener("loadedmetadata", init, { once: true });
+
+    function init() {
+
+      /* ---------- Barre de progression globale (commune aux deux modes) ---------- */
+      var setBar = gsap.quickSetter(bar, "scaleX");
+      ScrollTrigger.create({
+        trigger: track,
+        start: "top top",
+        end: "bottom bottom",
+        onUpdate: function (self) { setBar(self.progress); }
+      });
+
+      if (isIOS) initIOS();
+      else initScrub();
+
+      /* will-change posé uniquement autour de la plage active de chaque bloc, retiré ensuite */
+      var scrollDist = function () { return track.offsetHeight - window.innerHeight; };
+      BLOCKS.forEach(function (b) {
+        var inner = document.querySelector(b.el + " .inner");
+        ScrollTrigger.create({
+          start: function () { return scrollDist() * Math.max(0, b.start - 4) / 100; },
+          end:   function () { return scrollDist() * Math.min(100, b.end + 4) / 100; },
+          onToggle: function (self) { inner.classList.toggle("wc", self.isActive); }
+        });
+      });
+
+      ScrollTrigger.refresh();
+    }
+
+    /* ================================================================
+       MODE DESKTOP — scroll-scrubbing
+       ================================================================ */
+    function initScrub() {
+
+      /* --- Vidéo : progression → temps cible, lissé par lerp en rAF.
+             currentTime n'est JAMAIS assigné dans le handler de scroll. --- */
+      var targetTime = 0, currentTime = 0, rafId = null;
+
+      ScrollTrigger.create({
+        trigger: track,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        onUpdate: function (self) {
+          targetTime = self.progress * video.duration;   // mapping linéaire
+          if (rafId === null) rafId = requestAnimationFrame(step);
+        }
+      });
+
+      function step() {
+        var diff = targetTime - currentTime;
+        if (Math.abs(diff) < 0.001) { rafId = null; return; }  // boucle stoppée au repos
+        currentTime += diff * 0.1;                             // lerp, facteur 0.1
+        video.currentTime = currentTime;
+        rafId = requestAnimationFrame(step);
+      }
+
+      /* --- Blocs de texte : timeline maîtresse de 100 unités (= 100 % de piste),
+             scrubbée. Entrée : fade + y 30→0. Sortie : fade + blur 8px.
+             Les plages ne se chevauchent jamais. --- */
+      BLOCKS.forEach(function (b, i) {
+        var inner = document.querySelector(b.el + " .inner");
+        gsap.set(inner, i === 0 ? { autoAlpha: 1, y: 0 } : { autoAlpha: 0, y: 30 });
+      });
+
+      var tl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: track,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: true
+        }
+      });
+
+      BLOCKS.forEach(function (b, i) {
+        var inner = b.el + " .inner";
+        if (i > 0) {           // le hero est déjà visible à progress 0
+          tl.fromTo(inner,
+            { autoAlpha: 0, y: 30 },
+            { autoAlpha: 1, y: 0, duration: 3 },
+            b.start + 0.5);
+        }
+        if (i < BLOCKS.length - 1) {   // l'outro reste affiché jusqu'à la fin
+          tl.to(inner,
+            { autoAlpha: 0, filter: "blur(8px)", duration: 3 },
+            b.end - 1.5);
+        }
+      });
+
+      /* Compteur de puissance 0 → 224, piloté par le scroll (tabular-nums) */
+      var counter = { v: 0 };
+      tl.to(counter, {
+        v: 224,
+        duration: 9,
+        onUpdate: function () { powerEl.textContent = Math.round(counter.v); }
+      }, 31);
+
+      tl.set({}, {}, 100);   // étend la timeline à exactement 100 unités
+
+      /* Le hint de scroll disparaît dès qu'on quitte le hero */
+      tl.to(".scroll-hint", { autoAlpha: 0, duration: 2 }, 2);
+    }
+
+    /* ================================================================
+       MODE iOS — vidéo en boucle, fondus CSS classiques au scroll
+       ================================================================ */
+    function initIOS() {
+      root.classList.add("ios");
+
+      video.loop = true;
+      video.setAttribute("autoplay", "");
+      var p = video.play();
+      if (p && p.catch) {
+        p.catch(function () {
+          /* si l'autoplay est bloqué malgré muted : premier geste utilisateur */
+          window.addEventListener("touchstart", function () { video.play(); }, { once: true });
+        });
+      }
+
+      powerEl.textContent = "224";   // pas de compteur scrubbé sur iOS
+
+      var els = BLOCKS.map(function (b) { return document.querySelector(b.el); });
+      ScrollTrigger.create({
+        trigger: track,
+        start: "top top",
+        end: "bottom bottom",
+        onUpdate: function (self) {
+          var p = self.progress * 100;
+          els.forEach(function (el, i) {
+            el.classList.toggle("on", p >= BLOCKS[i].start && p <= BLOCKS[i].end);
+          });
+        }
+      });
+      els[0].classList.add("on");
+    }
+  })();
+  </script>
+</body>
+</html>
