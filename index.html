@@ -625,16 +625,19 @@
         end: "bottom bottom",
         scrub: true,
         onUpdate: function (self) {
-          targetTime = self.progress * video.duration;   // mapping linéaire
+          /* mapping linéaire, borné juste sous la durée pour éviter l'état "ended" */
+          targetTime = Math.min(self.progress * video.duration, video.duration - 0.05);
           if (rafId === null) rafId = requestAnimationFrame(step);
         }
       });
 
       function step() {
         var diff = targetTime - currentTime;
-        if (Math.abs(diff) < 0.001) { rafId = null; return; }  // boucle stoppée au repos
+        if (Math.abs(diff) < 0.001 && !video.seeking) { rafId = null; return; }  // boucle stoppée au repos
         currentTime += diff * 0.1;                             // lerp, facteur 0.1
-        video.currentTime = currentTime;
+        /* on n'empile jamais un seek sur un seek en cours (sinon l'image se fige),
+           et on n'assigne que si le navigateur a des données décodables */
+        if (video.readyState >= 2 && !video.seeking) video.currentTime = currentTime;
         rafId = requestAnimationFrame(step);
       }
 
